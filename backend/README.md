@@ -10,6 +10,7 @@ Backend da aplicação DishPlan desenvolvido com DRF e PostgreSQL
 
 ## Estrutura do Projeto
 
+``` text
 backend/
 ├── dishplan/ 
 │ ├── settings.py
@@ -25,12 +26,13 @@ backend/
 │
 ├── docs/
 │ └── database/
-│ └── dishplan_der.dbdiagram
+│ └── diagrama_der.png
 │
 ├── manage.py
 ├── requirements.txt
 ├── .env.example
 └── .gitignore
+```
 
 ## Instalação 
 
