@@ -39,7 +39,7 @@ backend/
 ### 1. Clone o repositório
 
 ```bash
-    git clone [text](https://github.com/nicmacedo/DishPlan.git)
+    git clone https://github.com/nicmacedo/DishPlan.git
     cd backend
 ```
 
