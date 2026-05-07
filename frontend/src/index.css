@@ -8,6 +8,13 @@
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Inter Variable', sans-serif;
+    
+    /* Configuração de Cores do App (DishPlan) */
+    --color-dish-primary: #184642;
+    --color-dish-accent: #D4A345;
+    --color-dish-leaf: #9FC184;
+    --color-dish-bg: #FAFAFA;
+
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
