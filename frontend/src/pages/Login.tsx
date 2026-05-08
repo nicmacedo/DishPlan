@@ -1,105 +1,195 @@
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { GoogleButton } from "@/components/ui/google-button";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import AuthLayout from "@/components/layout/AuthLayout";
+import { Link, useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { GoogleButton } from "@/components/ui/google-button"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import AuthLayout from "@/components/layout/AuthLayout"
+import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 const loginSchema = z.object({
   email: z.string().min(1, "E-mail é obrigatório").email("E-mail inválido"),
   password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
-});
+})
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = z.infer<typeof loginSchema>
 
 export default function Login() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid, dirtyFields },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-  });
+    mode: "onChange",
+  })
 
   const onSubmit = (data: LoginForm) => {
-    console.log("Login submetido:", data);
-    // Integração com backend para autenticação
-    navigate("/");
-  };
+    console.log("Login submetido:", data)
+    navigate("/")
+  }
 
   const handleGoogleLogin = () => {
-    // Integração com Google OAuth para login
-    console.log("Login com Google");
-    navigate("/");
-  };
+    console.log("Login com Google")
+    navigate("/")
+  }
 
   return (
-    <AuthLayout subtitle="Bem-vindo de volta!">
-      <div className="w-full bg-white md:bg-transparent rounded-3xl md:rounded-none p-2 sm:p-4 shadow-sm md:shadow-none">
-        <div className="text-center md:text-left mb-8 md:mb-10">
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-2 text-slate-800">Login</h2>
-          <p className="text-slate-500 text-sm sm:text-base">Entre com sua conta para continuar</p>
+    <AuthLayout subtitle="Bem-vindo de volta!" panelTitle="Entre na sua conta">
+      <div className="animate-[fadeUp_0.5s_ease-out_forwards]">
+        {/* Cabeçalho do formulário */}
+        <div className="mb-8">
+          <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
+            Olá, de volta! 👋
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Entre com suas credenciais para continuar
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
-          <div className="space-y-2 sm:space-y-3">
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5"
+          noValidate
+        >
+          {/* Campo E-mail */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="email"
+              className="block text-sm font-semibold text-foreground/80"
+            >
               E-mail
             </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              {...register("email")}
-              className={`w-full px-5 py-3.5 sm:py-4 rounded-2xl border text-base focus:outline-none focus:ring-2 focus:ring-dish-primary/20 focus:border-dish-primary transition-all ${errors.email ? 'border-red-500' : 'border-slate-200 hover:border-slate-300 bg-slate-50 focus:bg-white'}`}
-            />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+            <div className="relative">
+              <Mail className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                autoComplete="email"
+                {...register("email")}
+                className={cn(
+                  "w-full rounded-xl border py-3.5 pr-4 pl-11 text-sm font-medium transition-all duration-200",
+                  "bg-muted/50 placeholder:text-muted-foreground/60",
+                  "focus:bg-background focus:ring-2 focus:outline-none",
+                  errors.email
+                    ? "border-destructive/60 focus:border-destructive focus:ring-destructive/20"
+                    : dirtyFields.email && !errors.email
+                      ? "border-dish-leaf/70 focus:border-dish-primary focus:ring-dish-primary/20"
+                      : "border-border hover:border-border/80 focus:border-dish-primary focus:ring-dish-primary/20"
+                )}
+              />
+              {dirtyFields.email && !errors.email && (
+                <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-dish-leaf">
+                  ✓
+                </span>
+              )}
+            </div>
+            {errors.email && (
+              <p className="mt-1 animate-[fadeUp_0.2s_ease-out] text-xs font-medium text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2 sm:space-y-3">
+          {/* Campo Senha */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-foreground/80"
+              >
                 Senha
               </label>
-              <a href="#" className="text-sm text-dish-primary font-bold hover:text-dish-primary/80 transition-colors">
+              <a
+                href="#"
+                className="text-xs font-semibold text-dish-primary transition-all hover:underline dark:text-dish-leaf"
+              >
                 Esqueceu a senha?
               </a>
             </div>
-            <input
-              id="password"
-              type="password"
-              {...register("password")}
-              className={`w-full px-5 py-3.5 sm:py-4 rounded-2xl border text-base focus:outline-none focus:ring-2 focus:ring-dish-primary/20 focus:border-dish-primary transition-all ${errors.password ? 'border-red-500' : 'border-slate-200 hover:border-slate-300 bg-slate-50 focus:bg-white'}`}
-            />
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+            <div className="relative">
+              <Lock className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                {...register("password")}
+                className={cn(
+                  "w-full rounded-xl border py-3.5 pr-12 pl-11 text-sm font-medium transition-all duration-200",
+                  "bg-muted/50 placeholder:text-muted-foreground/60",
+                  "focus:bg-background focus:ring-2 focus:outline-none",
+                  errors.password
+                    ? "border-destructive/60 focus:border-destructive focus:ring-destructive/20"
+                    : "border-border hover:border-border/80 focus:border-dish-primary focus:ring-dish-primary/20"
+                )}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-4 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="mt-1 animate-[fadeUp_0.2s_ease-out] text-xs font-medium text-destructive">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-dish-primary hover:bg-dish-primary/95 text-white rounded-2xl py-6 sm:py-7 text-base font-bold transition-all active:scale-[0.98] hover:cursor-pointer mt-2"
+          {/* Botão de login */}
+          <Button
+            type="submit"
+            disabled={!isValid}
+            className={cn(
+              "mt-2 w-full rounded-xl py-6 text-sm font-bold tracking-wide transition-all duration-200",
+              "bg-dish-primary text-white hover:bg-dish-primary/90",
+              "shadow-[0_4px_16px_rgba(24,70,66,0.3)] hover:shadow-[0_6px_24px_rgba(24,70,66,0.4)]",
+              "active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+              "group flex items-center justify-center gap-2 hover:cursor-pointer"
+            )}
           >
             Entrar
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Button>
 
-          <div className="relative flex items-center py-2 mt-6">
-            <div className="grow border-t border-slate-200"></div>
-            <span className="shrink-0 mx-4 text-slate-400 text-sm font-medium">Ou continue com</span>
-            <div className="grow border-t border-slate-200"></div>
+          {/* Divisor */}
+          <div className="relative flex items-center py-1">
+            <div className="grow border-t border-border" />
+            <span className="mx-4 shrink-0 text-xs font-medium text-muted-foreground">
+              ou continue com
+            </span>
+            <div className="grow border-t border-border" />
           </div>
 
+          {/* Google */}
           <GoogleButton onClick={handleGoogleLogin} />
         </form>
 
-        <p className="mt-10 text-center text-sm font-medium text-slate-500">
+        {/* Rodapé */}
+        <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
           Não tem uma conta?{" "}
-          <Link to="/register" className="text-dish-accent font-bold hover:underline transition-all">
-            Criar conta
+          <Link
+            to="/register"
+            className="font-bold text-dish-primary transition-all hover:underline dark:text-dish-leaf"
+          >
+            Criar conta grátis
           </Link>
         </p>
       </div>
     </AuthLayout>
-  );
+  )
 }

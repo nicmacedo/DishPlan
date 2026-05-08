@@ -1,18 +1,23 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Welcome from "./pages/Welcome"
 import Home from "./pages/Home"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Colocar a lógica real de autenticação aqui (ex: verificar token no localStorage ou context)
-  const isAuthenticated = true; 
+  // Colocar a lógica real de autenticação aqui dps
+  const isAuthenticated = true
 
   if (!isAuthenticated) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/welcome" replace />
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 export function App() {
@@ -22,15 +27,15 @@ export function App() {
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
         {/* Protected Routes */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <ProtectedRoute>
               <Home />
             </ProtectedRoute>
-          } 
+          }
         />
       </Routes>
     </Router>
