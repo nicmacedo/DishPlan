@@ -8,6 +8,11 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Welcome from "./pages/Welcome"
 import Home from "./pages/Home"
+import Receitas from "./pages/Receitas"
+import Cardapio from "./pages/Cardapio"
+import Compras from "./pages/Compras"
+import Perfil from "./pages/Perfil"
+import AppLayout from "./components/layout/AppLayout"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // Colocar a lógica real de autenticação aqui dps
@@ -30,13 +35,18 @@ export function App() {
 
         {/* Protected Routes */}
         <Route
-          path="/"
           element={
             <ProtectedRoute>
-              <Home />
+              <AppLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="/" element={<Home />} />
+          <Route path="/receitas" element={<Receitas />} />
+          <Route path="/cardapio" element={<Cardapio />} />
+          <Route path="/compras" element={<Compras />} />
+          <Route path="/perfil" element={<Perfil />} />
+        </Route>
       </Routes>
     </Router>
   )

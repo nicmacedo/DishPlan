@@ -15,7 +15,6 @@ import {
   Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import AppLayout from "@/components/layout/AppLayout"
 
 {
   /* Dados mockados para o dashboard */
@@ -140,7 +139,7 @@ export default function Home() {
   })
 
   return (
-    <AppLayout pageTitle="Início">
+    <>
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 sm:px-6 md:px-8 lg:px-10">
         {/* ── Saudação ── */}
         <section style={{ animation: "fadeUp 0.4s ease-out both" }}>
@@ -443,6 +442,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-    </AppLayout>
+    </>
   )
 }

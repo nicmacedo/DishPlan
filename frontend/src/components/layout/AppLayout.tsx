@@ -1,22 +1,18 @@
-import type { ReactNode } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, Outlet } from "react-router-dom"
 import { Moon, Sun, ChevronRight, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/components/theme-provider"
 import BottomBar from "@/components/layout/BottomBar"
 import { navItems } from "@/constants"
 
-interface AppLayoutProps {
-  children: ReactNode
-  pageTitle?: string
-}
-
-export default function AppLayout({
-  children,
-  pageTitle = "DishPlan",
-}: AppLayoutProps) {
+export default function AppLayout() {
   const { pathname } = useLocation()
   const { theme, setTheme } = useTheme()
+
+  const currentNav = navItems.find((item) =>
+    item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)
+  )
+  const pageTitle = currentNav?.label || "DishPlan"
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
 
@@ -166,7 +162,7 @@ export default function AppLayout({
 
         {/* Conteúdo da Página */}
         <main className="mb-safe scrollbar-thin flex-1 overflow-y-auto md:mb-0">
-          {children}
+          <Outlet />
         </main>
       </div>
 
