@@ -37,6 +37,10 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.users",
+    "apps.groups",
+    "apps.recipes",
+    "apps.planning",
+    "apps.shopping",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -138,7 +142,7 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_COOKIE": "dishplan-auth",
     "JWT_AUTH_REFRESH_COOKIE": "dishplan-refresh",
-    "JWT_AUTH_HTTPONLY": True,
+    "JWT_AUTH_HTTPONLY": False,
     "JWT_AUTH_SAMESITE": config("JWT_COOKIE_SAMESITE", default="Lax"),
     "JWT_AUTH_SECURE": config("JWT_COOKIE_SECURE", default=False, cast=bool),
     "SESSION_LOGIN": False,
@@ -162,6 +166,8 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 
 SOCIALACCOUNT_ADAPTER = "apps.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = False
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {

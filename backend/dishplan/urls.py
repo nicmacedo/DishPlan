@@ -14,6 +14,10 @@ urlpatterns = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path("api/auth/", include("apps.users.urls")),
+    path("api/", include("apps.groups.urls")),
+    path("api/", include("apps.recipes.urls")),
+    path("api/", include("apps.planning.urls")),
+    path("api/", include("apps.shopping.urls")),
 ]
 
 if settings.DEBUG:

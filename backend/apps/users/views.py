@@ -13,6 +13,41 @@ from .serializers import RegisterSerializer
 
 User = get_user_model()
 
+
+class FixedOAuth2Client(OAuth2Client):
+    """
+    Compatibilidade entre dj-rest-auth 7.x e django-allauth 0.56+.
+    O dj-rest-auth passa 'scope' como 7° argumento posicional enquanto o allauth
+    0.56+ renomeou esse parâmetro para 'scope_delimiter', causando o erro
+    "multiple values for argument 'scope_delimiter'".
+    Esta subclasse absorve o 'scope' posicional e o descarta corretamente.
+    """
+
+    def __init__(
+        self,
+        request,
+        consumer_key,
+        consumer_secret,
+        access_token_method,
+        access_token_url,
+        callback_url,
+        scope=None,           # argumento posicional legado do dj-rest-auth
+        scope_delimiter=" ",  # argumento keyword do allauth moderno
+        headers=None,
+        basic_auth=False,
+    ):
+        super().__init__(
+            request,
+            consumer_key,
+            consumer_secret,
+            access_token_method,
+            access_token_url,
+            callback_url,
+            scope_delimiter=scope_delimiter,
+            headers=headers,
+            basic_auth=basic_auth,
+        )
+
 class CsrfTokenView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -37,4 +72,4 @@ class RegisterView(generics.CreateAPIView):
 class GoogleLoginView(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     callback_url = "postmessage"
-    client_class = OAuth2Client
+    client_class = FixedOAuth2Client
