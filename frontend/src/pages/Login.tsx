@@ -8,6 +8,9 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
 import AuthLayout from "@/components/layout/AuthLayout"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useGoogleLogin } from "@react-oauth/google"
+import { AuthService } from "@/services/auth.service"
+import { useAuthStore } from "@/stores/authStore"
 
 const loginSchema = z.object({
   email: z.string().min(1, "E-mail é obrigatório").email("E-mail inválido"),
@@ -19,6 +22,9 @@ type LoginForm = z.infer<typeof loginSchema>
 export default function Login() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
+  const loginStore = useAuthStore((state) => state.login)
+  const [isLoading, setIsLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const {
     register,
@@ -29,15 +35,48 @@ export default function Login() {
     mode: "onChange",
   })
 
-  const onSubmit = (data: LoginForm) => {
-    console.log("Login submetido:", data)
-    navigate("/")
+  const onSubmit = async (data: LoginForm) => {
+    try {
+      setIsLoading(true)
+      setAuthError(null)
+      
+      const tokens = await AuthService.login({
+        email: data.email,
+        password: data.password
+      })
+      
+      useAuthStore.getState().setTokens(tokens)
+      
+      const user = await AuthService.getProfile()
+      loginStore(tokens, user)
+      
+      navigate("/")
+    } catch (error) {
+      console.error("Erro no login:", error)
+      const err = error as { response?: { data?: { detail?: string } } };
+      setAuthError(err.response?.data?.detail || "Erro ao fazer login. Verifique suas credenciais.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleGoogleLogin = () => {
-    console.log("Login com Google")
-    navigate("/")
-  }
+  const handleGoogleLogin = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async ({ code }) => {
+      try {
+        setIsLoading(true)
+        setAuthError(null)
+        const { user, ...tokens } = await AuthService.googleLogin(code)
+        loginStore(tokens, user)
+        navigate("/")
+      } catch {
+        setAuthError("Não foi possível entrar com Google. Tente novamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    onError: () => setAuthError("Login com Google cancelado ou falhou."),
+  })
 
   return (
     <AuthLayout subtitle="Bem-vindo de volta!" panelTitle="Entre na sua conta">
@@ -149,11 +188,17 @@ export default function Login() {
               </p>
             )}
           </div>
+          
+          {authError && (
+            <p className="animate-[fadeUp_0.2s_ease-out] text-sm font-medium text-center text-destructive">
+              {authError}
+            </p>
+          )}
 
           {/* Botão de login */}
           <Button
             type="submit"
-            disabled={!isValid}
+            disabled={!isValid || isLoading}
             className={cn(
               "mt-2 w-full rounded-xl py-6 text-sm font-bold tracking-wide transition-all duration-200",
               "bg-dish-primary text-white hover:bg-dish-primary/90",
@@ -176,7 +221,7 @@ export default function Login() {
           </div>
 
           {/* Google */}
-          <GoogleButton onClick={handleGoogleLogin} />
+          <GoogleButton onClick={() => handleGoogleLogin()} />
         </form>
 
         {/* Rodapé */}

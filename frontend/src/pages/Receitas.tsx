@@ -1,98 +1,118 @@
-import { Plus, Clock, Flame, MoreVertical, BookOpen } from "lucide-react"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react"
+import { Plus, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-const receitas = [
-  {
-    id: 1,
-    titulo: "Frango Grelhado com Legumes",
-    tempoPreparo: "30 min",
-    dificuldade: "Fácil",
-    porcoes: 2,
-  },
-  {
-    id: 2,
-    titulo: "Salmão ao Forno",
-    tempoPreparo: "45 min",
-    dificuldade: "Médio",
-    porcoes: 4,
-  },
-  {
-    id: 3,
-    titulo: "Salada de Quinoa",
-    tempoPreparo: "15 min",
-    dificuldade: "Fácil",
-    porcoes: 2,
-  },
-  {
-    id: 4,
-    titulo: "Escondidinho de Batata Doce",
-    tempoPreparo: "60 min",
-    dificuldade: "Médio",
-    porcoes: 6,
-  },
-]
+import { Input } from "@/components/ui/input"
+import RecipeCard from "@/components/recipes/RecipeCard"
+import RecipeFormModal from "@/components/recipes/RecipeFormModal"
+import RecipeDetailModal from "@/components/recipes/RecipeDetailModal"
+import { recipesService } from "@/services/recipes.service"
+import type { Receita } from "@/types/api"
 
 export default function Receitas() {
+  const [recipes, setRecipes] = useState<Receita[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null)
+
+  const fetchRecipes = async () => {
+    setLoading(true)
+    try {
+      const response = await recipesService.getRecipes({ search: searchTerm })
+      // Lida com resposta paginada ou lista direta
+      const data = (response.data as any).results || response.data
+      setRecipes(data)
+    } catch (error) {
+      console.error("Erro ao buscar receitas", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Implementa um pequeno debounce para a busca
+    const delayDebounceFn = setTimeout(() => {
+      fetchRecipes()
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
+
   return (
-    <>
-      <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-        
-        {/* Header e Botão */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Minhas Receitas</h1>
-            <p className="text-sm text-muted-foreground mt-1">Gerencie suas receitas e crie novas opções deliciosas.</p>
-          </div>
-          <Button className="hidden md:flex gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Receita
-          </Button>
+    <div className="mx-auto flex h-full w-full max-w-7xl flex-col space-y-6 p-4 md:p-8">
+      {/* Header & Ações */}
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            Catálogo de Receitas
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie suas receitas e descubra novas ideias.
+          </p>
         </div>
 
-        {/* Lista/Grid de Receitas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {receitas.map((receita) => (
-            <div 
-              key={receita.id} 
-              className="flex flex-col p-4 bg-card rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow relative"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-dish-primary/10 text-dish-primary">
-                    <BookOpen className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-semibold text-card-foreground leading-tight">{receita.titulo}</h3>
-                </div>
-                <button className="text-muted-foreground hover:text-foreground shrink-0 rounded-full p-1 hover:bg-muted transition-colors">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-              </div>
-              
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-md">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{receita.tempoPreparo}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-md">
-                  <Flame className="h-3.5 w-3.5" />
-                  <span>{receita.dificuldade}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-md">
-                  <span>{receita.porcoes} porções</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* FAB (Floating Action Button) Mobile */}
-        <Button 
-          size="icon" 
-          className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg md:hidden z-40 bg-dish-primary hover:bg-dish-primary/90 text-white"
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="w-full bg-dish-primary text-white hover:bg-dish-primary/90 sm:w-auto"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="mr-2 h-4 w-4" /> Nova Receita
         </Button>
       </div>
-    </>
+
+      {/* Barra de Busca */}
+      <div className="relative">
+        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Buscar receita por título ou descrição..."
+          className="pl-10"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Grid de Receitas */}
+      {loading ? (
+        <div className="flex min-h-50 flex-1 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-dish-primary" />
+        </div>
+      ) : recipes.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {recipes.map((recipe) => (
+            <RecipeCard 
+               key={recipe.id} 
+               recipe={recipe} 
+               onClick={() => setSelectedRecipeId(recipe.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex min-h-75 flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/10 p-8 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-dish-primary/10">
+            <Search className="h-6 w-6 text-dish-primary" />
+          </div>
+          <h3 className="text-lg font-semibold">Nenhuma receita encontrada</h3>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {searchTerm
+              ? "Tente ajustar os termos da sua busca."
+              : "Você ainda não possui receitas. Clique em 'Nova Receita' para começar!"}
+          </p>
+        </div>
+      )}
+
+      {/* Modal Render */}
+      <RecipeFormModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={fetchRecipes}
+      />
+
+      <RecipeDetailModal
+        open={selectedRecipeId !== null}
+        onOpenChange={(open) => { if (!open) setSelectedRecipeId(null) }}
+        recipeId={selectedRecipeId}
+      />
+    </div>
   )
 }

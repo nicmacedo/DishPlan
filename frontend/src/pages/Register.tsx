@@ -19,6 +19,9 @@ import {
 } from "lucide-react"
 import AuthLayout from "@/components/layout/AuthLayout"
 import { cn } from "@/lib/utils"
+import { useGoogleLogin } from "@react-oauth/google"
+import { AuthService } from "@/services/auth.service"
+import { useAuthStore } from "@/stores/authStore"
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -52,8 +55,11 @@ const steps = [
 
 export default function Register() {
   const navigate = useNavigate()
+  const loginStore = useAuthStore((state) => state.login)
   const [step, setStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
   const totalSteps = steps.length
 
   const {
@@ -78,15 +84,48 @@ export default function Register() {
 
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1))
 
-  const onSubmit = (data: RegisterForm) => {
-    console.log("Conta criada:", data)
-    navigate("/")
+  const onSubmit = async (data: RegisterForm) => {
+    try {
+      setIsLoading(true)
+      setAuthError(null)
+      await AuthService.register({
+        email: data.email,
+        nome: data.name,
+        password: data.password,
+        data_nascimento: data.birthdate,
+      })
+      const tokens = await AuthService.login({ email: data.email, password: data.password })
+      const user = await AuthService.getProfile()
+      loginStore(tokens, user)
+      navigate("/")
+    } catch (error) {
+      const err = error as { response?: { data?: Record<string, string[]> } }
+      const firstError = err.response?.data
+        ? Object.values(err.response.data).flat()[0]
+        : null
+      setAuthError(firstError || "Erro ao criar conta. Tente novamente.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleGoogleRegister = () => {
-    console.log("Registrando com Google")
-    navigate("/")
-  }
+  const handleGoogleRegister = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async ({ code }) => {
+      try {
+        setIsLoading(true)
+        setAuthError(null)
+        const { user, ...tokens } = await AuthService.googleLogin(code)
+        loginStore(tokens, user)
+        navigate("/")
+      } catch {
+        setAuthError("Não foi possível entrar com Google. Tente novamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    onError: () => setAuthError("Login com Google cancelado ou falhou."),
+  })
 
   const currentStep = steps[step - 1]
   const StepIcon = currentStep.icon
@@ -349,6 +388,12 @@ export default function Register() {
           )}
 
           {/* ── Botão de Ação ── */}
+          {authError && (
+            <p className="animate-[fadeUp_0.2s_ease-out] text-sm font-medium text-center text-destructive">
+              {authError}
+            </p>
+          )}
+
           {step < totalSteps ? (
             <Button
               type="button"
@@ -366,14 +411,16 @@ export default function Register() {
           ) : (
             <Button
               type="submit"
+              disabled={isLoading}
               className={cn(
                 "mt-6 w-full rounded-xl py-6 text-sm font-bold tracking-wide transition-all duration-200",
                 "bg-dish-accent text-white hover:bg-dish-accent/90",
                 "shadow-[0_4px_16px_rgba(212,163,69,0.35)] hover:shadow-[0_6px_24px_rgba(212,163,69,0.5)]",
-                "group flex items-center justify-center gap-2 hover:cursor-pointer active:scale-[0.98]"
+                "group flex items-center justify-center gap-2 hover:cursor-pointer active:scale-[0.98]",
+                "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               )}
             >
-              Criar minha conta 🎉
+              {isLoading ? "Criando conta..." : "Criar minha conta 🎉"}
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
           )}
@@ -392,7 +439,7 @@ export default function Register() {
                 </div>
               </div>
 
-              <GoogleButton onClick={handleGoogleRegister} />
+              <GoogleButton onClick={() => handleGoogleRegister()} />
             </>
           )}
         </form>

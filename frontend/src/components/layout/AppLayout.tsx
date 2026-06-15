@@ -1,13 +1,15 @@
 import { Link, useLocation, Outlet } from "react-router-dom"
-import { Moon, Sun, ChevronRight, Settings } from "lucide-react"
+import { Moon, Sun, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/components/theme-provider"
 import BottomBar from "@/components/layout/BottomBar"
 import { navItems } from "@/constants"
+import { useAuthStore } from "@/stores/authStore"
 
 export default function AppLayout() {
   const { pathname } = useLocation()
   const { theme, setTheme } = useTheme()
+  const user = useAuthStore((state) => state.user)
 
   const currentNav = navItems.find((item) =>
     item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)
@@ -97,25 +99,17 @@ export default function AppLayout() {
             </span>
           </button>
 
-          <Link
-            to="/configuracoes"
-            className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sidebar-foreground/70 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-          >
-            <Settings className="h-4.5 w-4.5 transition-transform duration-200 group-hover:rotate-45" />
-            <span className="text-sm font-semibold">Configurações</span>
-          </Link>
-
           {/* Avatar do usuário */}
           <div className="mt-2 flex items-center gap-3 rounded-xl bg-sidebar-accent px-3 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-dish-primary/20 text-sm font-bold text-dish-primary dark:text-dish-leaf">
-              U
+              {user?.nome?.charAt(0)?.toUpperCase() ?? "U"}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-sidebar-foreground">
-                Usuário
+                {user?.nome ?? "Usuário"}
               </p>
               <p className="truncate text-xs text-sidebar-foreground/50">
-                usuario@email.com
+                {user?.email ?? ""}
               </p>
             </div>
           </div>
@@ -155,7 +149,7 @@ export default function AppLayout() {
 
             {/* Avatar */}
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-dish-primary/20 text-xs font-bold text-dish-primary dark:text-dish-leaf">
-              U
+              {user?.nome?.charAt(0)?.toUpperCase() ?? "U"}
             </div>
           </div>
         </header>
