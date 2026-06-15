@@ -73,6 +73,14 @@ class Receita(models.Model):
     porcoes = models.PositiveIntegerField(
         _("porcoes"), null=True, blank=True
     )
+    # Imagem armazenada como data URI base64 (ex: "data:image/jpeg;base64,...")
+    # Máximo recomendado: 5 MB antes da codificação.
+    imagem = models.TextField(_("imagem"), null=True, blank=True)
+    is_publica = models.BooleanField(
+        _("pública"),
+        default=False,
+        help_text=_("Receitas públicas são visíveis para todos os usuários."),
+    )
 
     ingredientes = models.ManyToManyField(
         Ingrediente,

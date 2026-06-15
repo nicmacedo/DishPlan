@@ -64,6 +64,7 @@ class ReceitaViewSet(viewsets.ModelViewSet):
                 Q(criador=user)  # Receitas proprias
                 | Q(grupo_id__in=grupos_ids)  # Receitas de grupos
                 | Q(id__in=receitas_compartilhadas_ids)  # Compartilhadas
+                | Q(is_publica=True)  # Receitas publicas (seed)
             )
             .select_related("criador", "grupo")
             .prefetch_related("ingredientes_receita__ingrediente")

@@ -1,3 +1,5 @@
+import base64
+
 from django.db.models import Q
 from rest_framework import serializers
 
@@ -10,6 +12,33 @@ from .models import (
     IngredienteReceita,
     Receita,
 )
+
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+class ImagemBase64Field(serializers.ImageField):
+    """Campo de escrita que recebe um arquivo de imagem e o converte
+    para uma data URI base64 (ex: "data:image/jpeg;base64,...").
+    O valor retornado é armazenado diretamente no TextField `imagem`.
+    """
+
+    def to_internal_value(self, data):
+        # Delega para ImageField (usa Pillow para validar que é uma imagem).
+        file = super().to_internal_value(data)
+
+        if file.size > MAX_IMAGE_SIZE_BYTES:
+            raise serializers.ValidationError(
+                "A imagem deve ter no máximo 5 MB."
+            )
+
+        content_type = getattr(file, "content_type", "image/jpeg")
+        file.seek(0)
+        encoded = base64.b64encode(file.read()).decode("utf-8")
+        return f"data:{content_type};base64,{encoded}"
+
+    def to_representation(self, value):
+        # Já é uma string — retorna como está.
+        return value if value else None
 
 
 class IngredienteSerializer(serializers.ModelSerializer):
@@ -52,6 +81,7 @@ class ReceitaListSerializer(serializers.ModelSerializer):
     criador_nome = serializers.CharField(source="criador.nome", read_only=True)
     grupo = GrupoResumoSerializer(read_only=True)
     total_ingredientes = serializers.SerializerMethodField()
+    has_imagem = serializers.SerializerMethodField()
 
     class Meta:
         model = Receita
@@ -65,11 +95,16 @@ class ReceitaListSerializer(serializers.ModelSerializer):
             "criador_nome",
             "grupo",
             "total_ingredientes",
+            "has_imagem",
+            "is_publica",
             "created_at",
         )
 
     def get_total_ingredientes(self, obj) -> int:
         return obj.ingredientes_receita.count()
+
+    def get_has_imagem(self, obj) -> bool:
+        return bool(obj.imagem)
 
 
 class ReceitaDetailSerializer(serializers.ModelSerializer):
@@ -81,6 +116,10 @@ class ReceitaDetailSerializer(serializers.ModelSerializer):
     ingredientes_data = IngredienteReceitaWriteSerializer(
         many=True, write_only=True, required=False
     )
+    # Campo de leitura: retorna a data URI base64 armazenada.
+    imagem = serializers.CharField(read_only=True, allow_null=True)
+    # Campo de escrita: recebe o arquivo e converte para base64.
+    imagem_upload = ImagemBase64Field(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = Receita
@@ -97,10 +136,13 @@ class ReceitaDetailSerializer(serializers.ModelSerializer):
             "grupo_detail",
             "ingredientes_receita",
             "ingredientes_data",
+            "imagem",
+            "imagem_upload",
+            "is_publica",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "created_at", "updated_at", "criador_nome")
+        read_only_fields = ("id", "created_at", "updated_at", "criador_nome", "is_publica")
 
     def validate_grupo(self, value):
         """Verifica se o usuario e membro do grupo selecionado."""
@@ -117,6 +159,9 @@ class ReceitaDetailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredientes_data = validated_data.pop("ingredientes_data", [])
+        imagem_base64 = validated_data.pop("imagem_upload", None)
+        if imagem_base64 is not None:
+            validated_data["imagem"] = imagem_base64
         receita = Receita.objects.create(**validated_data)
         for item in ingredientes_data:
             IngredienteReceita.objects.create(receita=receita, **item)
@@ -124,6 +169,9 @@ class ReceitaDetailSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         ingredientes_data = validated_data.pop("ingredientes_data", None)
+        imagem_base64 = validated_data.pop("imagem_upload", None)
+        if imagem_base64 is not None:
+            validated_data["imagem"] = imagem_base64
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
