@@ -31,6 +31,11 @@ def gerar_lista_compras(plano_semanal):
     )
 
     if not created:
+        # Sincroniza o grupo caso o plano semanal tenha mudado de grupo
+        if lista.grupo != plano_semanal.grupo:
+            lista.grupo = plano_semanal.grupo
+            lista.save(update_fields=['grupo'])
+
         # Remover itens gerados automaticamente (que possuem ingrediente)
         # Itens manuais (nome_manual) sao preservados
         lista.itens.filter(ingrediente__isnull=False).delete()

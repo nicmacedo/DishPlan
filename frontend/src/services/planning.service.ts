@@ -16,9 +16,9 @@ export const planningService = {
   // GET /api/planos/{id}/
   getPlano: (id: number) => api.get<PlanoSemanal>(`/api/planos/${id}/`),
 
-  // PUT /api/planos/{id}/
+  // PATCH /api/planos/{id}/
   updatePlano: (id: number, data: Partial<PlanoSemanalWrite>) =>
-    api.put<PlanoSemanal>(`/api/planos/${id}/`, data),
+    api.patch<PlanoSemanal>(`/api/planos/${id}/`, data),
 
   // DELETE /api/planos/{id}/
   deletePlano: (id: number) => api.delete<void>(`/api/planos/${id}/`),

@@ -1,6 +1,6 @@
 import type { GrupoResumo } from './recipes';
 
-export interface ItemCompra {
+export interface ItemCompraShopping {
   id: number;
   lista_compra: number;
   ingrediente: number | null;
@@ -32,7 +32,7 @@ export interface ListaCompraDetail {
   grupo_detail: GrupoResumo | null;
   plano_semanal: number;
   progresso_total: number;
-  itens: ItemCompra[];
+  itens: ItemCompraShopping[];
   created_at: string;
   updated_at: string;
 }
@@ -48,5 +48,5 @@ export interface PaginatedItemCompraList {
   count: number;
   next: string | null;
   previous: string | null;
-  results: ItemCompra[];
+  results: ItemCompraShopping[];
 }
